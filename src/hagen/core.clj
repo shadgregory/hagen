@@ -34,8 +34,20 @@
               [:h1 "Welcome"]
               [:p (:sub-brand @config)]
               [:div
-               (for [post @posts-vec]
-                 post)]]]]])})
+               (for [post (sort #(let [[m1 d1 y1] (clojure.string/split (:date (val %1)) #"/")
+                                       [m2 d2 y2] (clojure.string/split (:date (val %2)) #"/")]
+                                   (cond
+                                     (not (zero? (compare y2 y1))) (compare y2 y1)
+                                     (not (zero? (compare m2 m1))) (compare m2 m1)
+                                     (not (zero? (compare d2 d1))) (compare d2 d1)
+                                     :else 0)) @db)]
+                 [:article
+                  [:headers
+                   [:h2.text-info (key post)]
+                   [:p.date-and-tags
+                    (:date (val post))]
+                   [:p (:body (val post))]]])
+               ]]]]])})
 
 (defn -main [& args]
   (jetty/run-jetty (wrap-webjars handler) {:port (:port @config)}))
@@ -48,15 +60,7 @@
      (if (nil? (get @db ~title))
        (do
          (swap! db assoc ~title {:date date# :body ~body})
-         (spit "./db.clj" @db)))
-     (swap! posts-vec conj
-            [:article
-             [:header
-              [:h2.text-info ~title]
-              [:p.date-and-tags
-               (:date (get @db ~title))]]
-             [:p
-              (:body (get @db ~title))]])))
+         (spit "./db.clj" @db)))))
 
 (defn init [config-map]
   (doseq [keyval config-map]
