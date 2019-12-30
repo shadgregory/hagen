@@ -13,6 +13,7 @@
    :headers {"Content-Type" "text/html"}
    :body (html5
           [:head
+           [:meta {:charset "utf-8"}]
            (case (:theme @config)
              "yeti" (include-css "/assets/bootswatch-yeti/bootstrap.min.css")
              "flatly" (include-css "/assets/bootswatch-flatly/bootstrap.min.css")
@@ -27,7 +28,17 @@
           [:body
            [:nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
             [:div.container
-             [:a.navbar-brand {:href "#"} (:brand @config)]]]
+             [:a.navbar-brand {:href "#"} (:brand @config)]
+             [:div#navbar_collapse.collapse.navbar-collapse
+              [:ul.navbar-nav.mr-auto
+               [:li.nav-item.dropdown
+                [:a#MenuLink.nav-link.dropdown-toggle {:href "#"
+                                                       :data-toggle "dropdown"} "Tags " [:b.caret]]
+                [:div.dropdown-menu {:aria-labelledby "tagsMenuLink"}
+                 (for [tag (sort (distinct (flatten (for [row @db] (:tags (val row))))))]
+                   [:a.dropdown-item {:href "#"} tag])]]]]
+             ];;div.container
+            ];;nav
            [:div.container
             [:div.row
              [:div.content.col-md-12
@@ -47,7 +58,10 @@
                    [:p.date-and-tags
                     (:date (val post))]
                    [:p (:body (val post))]]])
-               ]]]]])})
+               ]]]];;div.container
+           (include-js "/assets/jquery/jquery.min.js")
+           (include-js "/assets/bootstrap/js/bootstrap.bundle.min.js")
+           ])})
 
 (defn -main [& args]
   (jetty/run-jetty (wrap-webjars handler) {:port (:port @config)}))
@@ -55,12 +69,19 @@
 (defn start []
   (jetty/run-jetty (wrap-webjars handler) {:port (:port @config)}))
 
-(defmacro defpost [title body]
-  `(let [date# (.format (java.text.SimpleDateFormat. "MM/dd/yyyy") (new java.util.Date))]
-     (if (nil? (get @db ~title))
-       (do
-         (swap! db assoc ~title {:date date# :body ~body})
-         (spit "./db.clj" @db)))))
+(defmacro defpost
+  ([title body]
+   `(let [date# (.format (java.text.SimpleDateFormat. "MM/dd/yyyy") (new java.util.Date))]
+      (if (nil? (get @db ~title))
+        (do
+          (swap! db assoc ~title {:date date# :body ~body})
+          (spit "./db.clj" @db)))))
+  ([title body & tags]
+   `(let [date# (.format (java.text.SimpleDateFormat. "MM/dd/yyyy") (new java.util.Date))]
+      (if (nil? (get @db ~title))
+        (do
+          (swap! db assoc ~title {:date date# :body ~body :tags [~@tags]})
+          (spit "./db.clj" @db))))))
 
 (defn init [config-map]
   (doseq [keyval config-map]
@@ -70,6 +91,8 @@
        :brand "Shad's Blog"
        :sub-brand "Shad Gregory's Blog"})
 
-(defpost "This is a title" "This is a body!")
-(defpost "This is another title" "This is another body!")
-(defpost "Third Title" "My third post today")
+(defpost "This is a title" "This is a body!" "history")
+(defpost "This is another title" [:div "This is " [:b "another "] "body"] "court")
+(defpost "Third Title" "My third post today" "foobar" "history")
+
+;;'(html (body This is the body.)) ==> "<html><body>This is the body.</body></html>"
