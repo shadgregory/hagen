@@ -9,7 +9,6 @@
                  [ring/ring-core "1.8.0"]
                  [garden "1.3.9"]
                  [nrepl "0.6.0"]
-                 [metosin/reitit "0.3.10"]
                  [org.slf4j/slf4j-simple "1.7.21"]
                  [org.webjars/bootstrap "4.2.1"]
                  [org.webjars/jquery "3.4.1"]
@@ -25,4 +24,5 @@
                  [org.webjars/bootswatch-spacelab "4.2.1"]
                  [ring/ring-jetty-adapter "1.8.0"]]
   :main ^:skip-aot hagen.core
+  :plugins [[lein-ring "0.12.5"]]
   :repl-options {:init-ns hagen.core})
