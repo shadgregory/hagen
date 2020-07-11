@@ -1,11 +1,13 @@
 (ns hagen.core
   (:require [ring.adapter.jetty :as jetty]
             [hiccup.page :refer [include-js include-css html5]]
+            [garden.core :refer [css]]
             [clojure.java.io :as io]
             [clojure.string :as str]
+            [clojure.walk :refer [keywordize-keys]]
+            [ring.util.codec :refer [form-decode]]
             [ring.middleware.webjars :refer [wrap-webjars]]))
 
-(def posts-vec (atom []))
 (def db (atom
          (if (.exists (io/file "./db.clj"))
            (eval (read-string (slurp "./db.clj")))
@@ -35,62 +37,110 @@
      "united" (include-css "/assets/bootswatch-united/bootstrap.min.css")
      (include-css "/assets/bootswatch-litera/bootstrap.min.css"))])
 
-(defn posts-page [& current-tag]
-  (html5
-   (posts-head)
-   [:body
-    [:nav.navbar.navbar-expand-sm.navbar-dark.bg-dark
-     [:div.container
-      [:a.navbar-brand {:href "/"} (:brand @config)]
-      [:div#navbar_collapse.collapse.navbar-collapse
-       [:ul.navbar-nav.mr-auto
-        [:li.nav-item.dropdown
-         [:a#MenuLink.nav-link.dropdown-toggle {:href "#"
-                                                :data-toggle "dropdown"} "Tags " [:b.caret]]
-         [:div.dropdown-menu {:aria-labelledby "tagsMenuLink"}
-          (for [tag (sort (distinct (flatten (for [row @db] (:tags (val row))))))]
-            [:a.dropdown-item {:href (str "/tags/" tag)} tag])]]
-        [:li.nav-item
-         [:a.nav-link {:href "/rss"} "RSS"]]]]]]
-    [:div.container
-     [:div.row
-      [:div.content.col-md-12
-       [:h1 "Welcome"]
-       [:p (:sub-brand @config)]
-       [:div
-        (for [post (sort #(let [[m1 d1 y1] (clojure.string/split (:date (val %1)) #"/")
-                                [m2 d2 y2] (clojure.string/split (:date (val %2)) #"/")]
-                            (cond
-                              (not (zero? (compare y2 y1))) (compare y2 y1)
-                              (not (zero? (compare m2 m1))) (compare m2 m1)
-                              (not (zero? (compare d2 d1))) (compare d2 d1)
-                              :else 0)) @db)]
-          (if (or (nil? current-tag) (member? (first current-tag) (:tags (val post))))
-            [:article
-             [:a {:name (clojure.string/replace (key post) #" " "_")}]
-             [:headers
-              [:h2.text-info (key post)]
-              [:p.date-and-tags
-               (:date (val post)) " :: "
-               (for [tag (:tags (val post))]
-                 [:span {:style "padding-right: 4px;"}
-                  [:a {:href (str "/tags/" tag)} tag]])]
-              [:p (:body (val post))]]]))]]]]
-    (include-js "/assets/jquery/jquery.min.js")
-    (include-js "/assets/bootstrap/js/bootstrap.bundle.min.js")]))
+(defn posts-page [& args]
+  (let [start (Integer. (:start (first args) 1))]
+    (html5
+     (posts-head)
+     [:body
+      [:nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
+       [:div.container
+        [:a.navbar-brand {:href "/"} (:brand @config)]
+        [:div#navbar_collapse.collapse.navbar-collapse
+         [:ul.navbar-nav.mr-auto
+          [:li.nav-item.dropdown
+           [:a#MenuLink.nav-link.dropdown-toggle {:href "#"
+                                                  :data-toggle "dropdown"} "Tags " [:b.caret]]
+           [:div.dropdown-menu {:aria-labelledby "tagsMenuLink"}
+            [:a.dropdown-item {:href "/"} "All"]
+            (for [tag (sort (distinct (flatten (for [row @db] (:tags (val row))))))]
+              [:a.dropdown-item {:href (str "/tags/" tag)} tag])]]
+          [:li.nav-item
+           [:a.nav-link {:href "/rss"} "RSS"]]]]]]
+      [:div.container
+       [:div.row
+        [:div.content.col-md-12
+         [:h1 "Welcome"]
+         [:p (:sub-brand @config)]
+         [:div
+          (for [post (for [x (range (dec start) (if (< (+ start 4) (count @db))
+                                                  (+ start 4)
+                                                  (count @db)))]
+                       (nth (sort #(let [[m1 d1 y1] (str/split (:date (val %1)) #"/")
+                                         [m2 d2 y2] (str/split (:date (val %2)) #"/")]
+                                     (cond
+                                       (not (zero? (compare y2 y1))) (compare y2 y1)
+                                       (not (zero? (compare m2 m1))) (compare m2 m1)
+                                       (not (zero? (compare d2 d1))) (compare d2 d1)
+                                       :else 0)) @db) x))]
+            (if (or (nil? (:tag args)) (member? (first (:tag args)) (:tags (val post))))
+              [:article
+               [:a {:name (clojure.string/replace (key post) #" " "_")}]
+               [:headers
+                [:h2.text-info (key post)]
+                [:p.date-and-tags
+                 (:date (val post)) " :: "
+                 (for [tag (:tags (val post))]
+                   [:span {:style "padding-right: 4px;"}
+                    [:a.text-warning {:href (str "/tags/" tag)} tag]])]
+                [:p (:body (val post))]]]))
+          ];;div
+         (if (> (count @db) 5)
+           [:nav {:aria-label "..."}
+            [:ul.pagination
+             (for [x (range 1 (inc (int (Math/ceil (/ (count @db) 5)))))]
+               [:li
+                (if (= x (int (Math/ceil (/ start 5))))
+                  {:class "page-item active"}
+                  {:class "page-item"})
+                [:a.page-link {:href (str "/?start=" (inc (* 5 (dec x))))} x]])]])]]]
+      (include-js "/assets/jquery/jquery.min.js")
+      (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-clojure.js")
+      (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-lisp.min.js")
+      (include-js "/assets/bootstrap/js/bootstrap.bundle.min.js")])))
 
 (defn handler [request]
-  (let [tags (str/split (:uri request) #"\/")]
-    (prn (second tags)))
   (cond
     (not (nil? (re-find #"\/tags\/" (:uri request))))
     {:status 200
      :headers {"Content-Type" "text/html"}
-     :body (posts-page (let [tags (str/split (:uri request) #"\/")]
-                         (nth tags 2)))}
-    (= "/" (:uri request)) {:status 200
-                            :headers {"Content-Type" "text/html"}
-                            :body (posts-page)}
+     :body (posts-page {:tag (let [tags (str/split (:uri request) #"\/")]
+                               (nth tags 2))})}
+    (= "/rss" (:uri request)) {:status 200
+                               :headers {"Content-Type" "text/xml"}
+                               :body (str "<?xml version='1.0' encoding='UTF-8' ?>"
+                                          "<rss version='2.0'>"
+                                          "<link>"
+                                          (:link @config)
+                                          "</link>"
+                                          "<description>"
+                                          (:description @config)
+                                          "</description>"
+                                          "<channel>"
+                                          (loop [posts (sort #(let [[m1 d1 y1] (clojure.string/split (:date (val %1)) #"/")
+                                                                    [m2 d2 y2] (clojure.string/split (:date (val %2)) #"/")]
+                                                                (cond
+                                                                  (not (zero? (compare y2 y1))) (compare y2 y1)
+                                                                  (not (zero? (compare m2 m1))) (compare m2 m1)
+                                                                  (not (zero? (compare d2 d1))) (compare d2 d1)
+                                                                  :else 0)) @db)
+                                                 result ""]
+                                            (cond
+                                              (empty? posts) result
+                                              :else (recur (rest posts) (str result "<item>"
+                                                                             "<title>"
+                                                                             (key (first posts))
+                                                                             "</title>"
+                                                                             "<description>"
+                                                                             (:body (val (first posts)))
+                                                                             "</description>"
+                                                                             "</item>"))))
+                                          "</channel>"
+                                          "</rss>")}
+    (= "/" (:uri request)) (let [args (if (not (nil? (:query-string request)))
+                                        (keywordize-keys (form-decode (:query-string request))))]
+                             {:status 200
+                              :headers {"Content-Type" "text/html"}
+                              :body (posts-page args)})
     :else {:status 404
            :body (html5 (posts-head)
                         [:body [:h2 "Page not found."]])}))
@@ -121,8 +171,16 @@
 
 (init {:theme "sketchy"
        :brand "Shad's Blog"
+       :link "https://wsgregory.us"
+       :description "A most wonderous blog."
        :sub-brand "Shad Gregory's Blog"})
 
 (defpost "This is a title" "This is a body!" "history")
-(defpost "This is another title" [:div "This is " [:b "another "] "body"] "court")
-(defpost "Third Title" "My third post today" "foobar" "history")
+(defpost "Back to Hagen!" "Starting Hagen again today!" "meta")
+(defpost "Keep on Keeping on!" "Need to never stop. Don't stop no." "inspiration" "meta")
+(defpost "Blah Blah Blah" "Blah blah blah blah")
+(defpost "Hagen is My Inspiration!" "It keeps me keeping on." "inspiration")
+(defpost "Coronavirus Blues" "Stuck inside for another day." "complaining")
+(defpost "Intriguing Questions" "<p>Can I?<p><p>use paragraphs?</p>" "meta")
+;;(defpost "This is another title" [:div "This is " [:b "another "] "body"] "court")
+;;(defpost "Third Title" "My third post today" "foobar" "history")
