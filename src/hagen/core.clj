@@ -1,6 +1,7 @@
 (ns hagen.core
   (:require [ring.adapter.jetty :as jetty]
             [hiccup.page :refer [include-js include-css html5]]
+            [hiccup.core :refer [html]]
             [garden.core :refer [css]]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -151,19 +152,25 @@
 (defn start []
   (jetty/run-jetty (wrap-webjars handler) {:port (:port @config)}))
 
-(defmacro defpost
+(defn defpost
   ([title body]
-   `(let [date# (.format (java.text.SimpleDateFormat. "MM/dd/yyyy") (new java.util.Date))]
-      (if (nil? (get @db ~title))
-        (do
-          (swap! db assoc ~title {:date date# :body ~body})
-          (spit "./db.clj" @db)))))
+   (let [date (.format (java.text.SimpleDateFormat. "MM/dd/yyyy") (new java.util.Date))]
+     (if (nil? (get @db title))
+       (do
+         (swap! db assoc title {:date date :body body})
+         (spit "./db.clj" @db))
+       (do
+         (swap! db assoc title {:date (:date (get @db title)) :body body})
+         (spit "./db.clj" @db)))))
   ([title body & tags]
-   `(let [date# (.format (java.text.SimpleDateFormat. "MM/dd/yyyy") (new java.util.Date))]
-      (if (nil? (get @db ~title))
-        (do
-          (swap! db assoc ~title {:date date# :body ~body :tags [~@tags]})
-          (spit "./db.clj" @db))))))
+   (let [date (.format (java.text.SimpleDateFormat. "MM/dd/yyyy") (new java.util.Date))]
+     (if (nil? (get @db title))
+       (do
+         (swap! db assoc title {:date date :body body :tags (reduce conj [] tags)})
+         (spit "./db.clj" @db))
+       (do
+         (swap! db assoc title {:date (:date (get @db title)) :body body :tags (reduce conj [] tags)})
+         (spit "./db.clj" @db))))))
 
 (defn init [config-map]
   (doseq [keyval config-map]
@@ -180,7 +187,10 @@
 (defpost "Keep on Keeping on!" "Need to never stop. Don't stop no." "inspiration" "meta")
 (defpost "Blah Blah Blah" "Blah blah blah blah")
 (defpost "Hagen is My Inspiration!" "It keeps me keeping on." "inspiration")
-(defpost "Coronavirus Blues" "Stuck inside for another day." "complaining")
+(defpost "Coronavirus Blues" "Stuck inside for another day. Booo!!! Booooo!" "complaining")
 (defpost "Intriguing Questions" "<p>Can I?<p><p>use paragraphs?</p>" "meta")
+(defpost "Hiccup Test" (html [:div
+                              [:p "Hiccup Test"]
+                              [:p "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla non urna ut sapien consequat pharetra. Fusce eleifend turpis risus, eu facilisis neque eleifend vitae."]]) "meta")
 ;;(defpost "This is another title" [:div "This is " [:b "another "] "body"] "court")
 ;;(defpost "Third Title" "My third post today" "foobar" "history")
