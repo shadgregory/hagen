@@ -48,7 +48,7 @@
       [:nav.navbar.navbar-expand-sm.navbar-light.bg-light
        [:div.container
         [:a.navbar-brand {:href "/"}
-         [:img {:src "/img/chest.png" :style "padding-right:2px;"}] (:brand @config)]
+         [:img {:src (str "/img/" (:brand-icon @config)) :style "padding-right:2px;"}] (:brand @config)]
         [:div#navbar_collapse.collapse.navbar-collapse
          [:ul.navbar-nav.mr-auto
           [:li.nav-item.dropdown
@@ -78,8 +78,6 @@
                                           (not (zero? (compare m2 m1))) (compare m2 m1)
                                           (not (zero? (compare d2 d1))) (compare d2 d1)
                                           :else 0)) the-db) x))]
-            (prn (count curr-db))
-            (prn (count the-db))
             [:div
              (for [post curr-db]
                [:article
@@ -144,8 +142,6 @@
                                           "</channel>"
                                           "</rss>")}
     (re-find #"^\/tags" (:uri request)) (do
-                                          (prn "uri " (:uri request))
-                                          (prn "tag " (nth (clojure.string/split (:uri request) #"\/") 2))
                                           {:status 200
                                            :headers {"Content-Type" "text/html"}
                                            :body (let [tag
@@ -197,6 +193,7 @@
 (init {:theme "sketchy"
        :brand "Shad's Blog"
        :link "https://wsgregory.us"
+       :brand-icon "chest.png"
        :description "A most wonderous blog."
        :sub-brand "Shad Gregory's Blog"})
 
