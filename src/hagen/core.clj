@@ -62,7 +62,7 @@
            [:a.nav-link {:target "_blank" :href "/rss"} "RSS"]]]]]]
       [:div.container
        [:div.row
-        [:div.content.col-md-12
+        [:div.content.col-md-9
          [:h1 "Welcome"]
          [:p (:sub-brand @config)]
          [:div
@@ -101,7 +101,13 @@
                     [:a.page-link {:href (str "/?start=" (inc (* 5 (dec x))))} x]])]])]
             );; let
           ];;div
-         ]]]
+         ];;content
+        [:div.content.col-md-3
+         [:div [:h4 "Blog Roll"]]
+         [:ul
+          (for [blog (:blog-roll @config)]
+            [:li [:a {:href (:url blog) :target "_blank"} (:title blog)]])]];;blog-roll
+        ]]
       (include-js "/assets/jquery/jquery.min.js")
       (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-clojure.js")
       (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-lisp.min.js")
@@ -195,17 +201,25 @@
        :link "https://wsgregory.us"
        :brand-icon "chest.png"
        :description "A most wonderous blog."
-       :sub-brand "Shad Gregory's Blog"})
-
-(defpost "This is a title" "This is a body!" "history")
-(defpost "Back to Hagen!" "Starting Hagen again today!" "meta")
-(defpost "Keep on Keeping on!" "Need to never stop. Don't stop no." "inspiration" "meta")
-(defpost "Blah Blah Blah" "Blah blah blah blah")
-(defpost "Hagen is My Inspiration!" "It keeps me keeping on." "inspiration")
-(defpost "Coronavirus Blues" "Stuck inside for another day. Booo!!! Booooo!" "complaining")
-(defpost "Intriguing Questions" "<p>Can I?<p><p>use paragraphs?</p>" "meta")
-(defpost "Hiccup Test" (html [:div
-                              [:p "Hiccup Test"]
-                              [:p "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla non urna ut sapien consequat pharetra. Fusce eleifend turpis risus, eu facilisis neque eleifend vitae."]]) "meta")
-;;(defpost "This is another title" [:div "This is " [:b "another "] "body"] "court")
-;;(defpost "Third Title" "My third post today" "foobar" "history")
+       :sub-brand "Shad Gregory's Blog"
+       :blog-roll [{:title "Fix the Court"
+                    :url "https://fixthecourt.com/"}
+                   {:title "Planet Clojure"
+                    :url "http://planet.clojure.in/"}
+                   {:title "Pragmatic Emacs"
+                    :url "http://pragmaticemacs.com/"}]})
+(defpost "Judicial Review Scorecard 1: Marbury v. Madison"
+  (html
+   [:div
+    [:p "Judicial review is the idea (at least in the United States) that court has the power to veto any law, or any part of any law, at any time. It's long been my suspicion that when the supreme court used judicial review against the states, it's a mixed bag. But when it uses judicial review against Congress, it's almost always bad. To test that, I've decided to start the judicial review scorecard."]
+    [:p [:i "Marbury v. Madison"] " is ground zero for judicial review. A lot of "
+     [:a {:href "https://en.wikipedia.org/wiki/Marbury_v._Madison"} "ink"]
+     " has been spilled on this decision, so I won't spend a lot of time on it except to say that this one is neutral. "]
+    [:div.card.text-white.bg-info.mb-3 {:style "20rem"}
+     [:div.card-header "Judicial Review Scorecard"]
+     [:div.card-body
+      [:p.card-text
+       [:p "Good: 0"]
+       [:p "Bad: 0"]
+       [:p "Neutral: 1" ]]]]])
+  "supreme_court" "judicial_review")
