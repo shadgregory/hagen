@@ -147,12 +147,11 @@
                                                                              "</item>"))))
                                           "</channel>"
                                           "</rss>")}
-    (re-find #"^\/tags" (:uri request)) (do
-                                          {:status 200
-                                           :headers {"Content-Type" "text/html"}
-                                           :body (let [tag
-                                                       (nth (clojure.string/split (:uri request) #"\/") 2)]
-                                                   (posts-page {:tag tag}))})
+    (re-find #"^\/tags" (:uri request)) {:status 200
+                                         :headers {"Content-Type" "text/html"}
+                                         :body (let [tag
+                                                     (nth (clojure.string/split (:uri request) #"\/") 2)]
+                                                 (posts-page {:tag tag}))}
     (= "/" (:uri request)) (let [args (if (not (nil? (:query-string request)))
                                         (keywordize-keys (form-decode (:query-string request))))]
                              {:status 200
@@ -169,7 +168,7 @@
 
 (defn -main [& args]
   (jetty/run-jetty
-   (wrap-file(wrap-webjars handler) "public")
+   (wrap-file (wrap-webjars handler) "resources")
    {:port (:port @config)}))
 
 (defn defpost
@@ -208,18 +207,51 @@
                     :url "http://planet.clojure.in/"}
                    {:title "Pragmatic Emacs"
                     :url "http://pragmaticemacs.com/"}]})
-(defpost "Judicial Review Scorecard 1: Marbury v. Madison"
+
+(defn scorecard [title overturned good bad neutral]
+  [:div
+   [:div.card.text-white.bg-info.mb-3
+    [:div.card-header "Judicial Review Scorecard"]
+    [:div.card-body
+     [:h4.card-title title]
+     [:p.card-text
+      [:p [:h5 "Overturned: " overturned]]
+      [:p (str "Good: " good)]
+      [:p (str "Bad: " bad)]
+      [:p (str "Neutral: " neutral) ]]]]])
+
+;; (defpost "Judicial Review Scorecard 1: Marbury v. Madison"
+;;   (html
+;;    [:div
+;;     [:p "Judicial review is the idea (at least in the United States) that court has the power to veto any law, or any part of any law, at any time. It's long been my suspicion that when the supreme court used judicial review against the states, it's a mixed bag. But when it uses judicial review against Congress, it's almost always bad. To test that, I've decided to start the judicial review scorecard."]
+;;     [:p [:i "Marbury v. Madison"] " is ground zero for judicial review. A lot of "
+;;      [:a {:href "https://en.wikipedia.org/wiki/Marbury_v._Madison"} "ink"]
+;;      " has been spilled on this decision, so I won't spend a lot of time on it except to say that this one is neutral. "]]
+;;    (scorecard "Marbury v. Madison" "Judiciary Act of 1789" 0 0 1))
+;;   "supreme_court" "judicial_review")
+
+;; (defpost "Judicial Review Scorecard 2: Dred Scott v. Sandford"
+;;   (html
+;;    [:div
+;;     [:p ]
+;;     (scorecard "Dred Scott v. Sandford" "Missouri Compromise of 1820" 0 1 1)]
+;;    )
+;;   "supreme_court" "judicial_review")
+
+(defpost "Orient RE-AW0004S"
   (html
    [:div
-    [:p "Judicial review is the idea (at least in the United States) that court has the power to veto any law, or any part of any law, at any time. It's long been my suspicion that when the supreme court used judicial review against the states, it's a mixed bag. But when it uses judicial review against Congress, it's almost always bad. To test that, I've decided to start the judicial review scorecard."]
-    [:p [:i "Marbury v. Madison"] " is ground zero for judicial review. A lot of "
-     [:a {:href "https://en.wikipedia.org/wiki/Marbury_v._Madison"} "ink"]
-     " has been spilled on this decision, so I won't spend a lot of time on it except to say that this one is neutral. "]
-    [:div.card.text-white.bg-info.mb-3 {:style "20rem"}
-     [:div.card-header "Judicial Review Scorecard"]
-     [:div.card-body
-      [:p.card-text
-       [:p "Good: 0"]
-       [:p "Bad: 0"]
-       [:p "Neutral: 1" ]]]]])
-  "supreme_court" "judicial_review")
+    [:p [:img {:src "/img/RE-AW0004S_New.jpg"
+               :height "300"
+               :alt "Orient Mechanical Classic Watch"}]]
+    [:p "Very attractive blue arabic numerals on a white dial. Love the power reserve complication and the 38.7 mm size. Around $800."]])
+  "watches")
+
+(defpost "Timex Marlin Hand-Wound"
+  (html
+   [:div
+    [:p [:img {:src "/img/TW2R47900.png"
+               :height "300"
+               :alt "Timex Marlin"}]]
+    [:p "Is it worth $200? Not sure, but nothing else looks like it. Love the mid-century numerals and the retro size"]])
+  "watches")
