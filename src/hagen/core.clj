@@ -27,16 +27,29 @@
 (defn posts-head []
   [:head
    [:meta {:charset "utf-8"}]
+   [:title (:brand @config)]
    (case (:theme @config)
-     "yeti" (include-css "/assets/bootswatch-yeti/bootstrap.min.css")
-     "flatly" (include-css "/assets/bootswatch-flatly/bootstrap.min.css")
-     "pulse" (include-css "/assets/bootswatch-pulse/bootstrap.min.css")
-     "spacelab" (include-css "/assets/bootswatch-spacelab/bootstrap.min.css")
-     "cosmo" (include-css "/assets/bootswatch-cosmo/bootstrap.min.css")
-     "minty" (include-css "/assets/bootswatch-minty/bootstrap.min.css")
-     "sketchy" (include-css "/assets/bootswatch-sketchy/bootstrap.min.css")
-     "solar" (include-css "/assets/bootswatch-solar/bootstrap.min.css")
-     "united" (include-css "/assets/bootswatch-united/bootstrap.min.css")
+     "cerulean" (include-css "/assets/bootswatch/dist/cerulean/bootstrap.min.css")
+     "cosmo" (include-css "/assets/bootswatch/dist/cosmo/bootstrap.min.css")
+     "cyborg" (include-css "/assets/bootswatch/dist/cyborg/bootstrap.min.css")
+     "darkly" (include-css "/assets/bootswatch/dist/darkly/bootstrap.min.css")
+     "flatly" (include-css "/assets/bootswatch/dist/flatly/bootstrap.min.css")
+     "journal" (include-css "/assets/bootswatch/dist/journal/bootstrap.min.css")
+     "litera" (include-css "/assets/bootswatch/dist/litera/bootstrap.min.css")
+     "lumen" (include-css "/assets/bootswatch/dist/lumen/bootstrap.min.css")
+     "lux" (include-css "/assets/bootswatch/dist/lux/bootstrap.min.css")
+     "materia" (include-css "/assets/bootswatch/dist/materia/bootstrap.min.css")
+     "minty" (include-css "/assets/bootswatch/dist/minty/bootstrap.min.css")
+     "pulse" (include-css "/assets/bootswatch/dist/pulse/bootstrap.min.css")
+     "sandstone" (include-css "/assets/bootswatch/dist/sandstone/bootstrap.min.css")
+     "simplex" (include-css "/assets/bootswatch/dist/simplex/bootstrap.min.css")
+     "sketchy" (include-css "/assets/bootswatch/dist/sketchy/bootstrap.min.css")
+     "slate" (include-css "/assets/bootswatch/dist/slate/bootstrap.min.css")
+     "solar" (include-css "/assets/bootswatch/dist/solar/bootstrap.min.css")
+     "spacelab" (include-css "/assets/bootswatch/dist/spacelab/bootstrap.min.css")
+     "superhero" (include-css "/assets/bootswatch/dist/superhero/bootstrap.min.css")
+     "united" (include-css "/assets/bootswatch/dist/united/bootstrap.min.css")
+     "yeti" (include-css "/assets/bootswatch/dist/yeti/bootstrap.min.css")
      (include-css "/assets/bootswatch-litera/bootstrap.min.css"))])
 
 (defn posts-page [& args]
@@ -53,7 +66,9 @@
          [:ul.navbar-nav.mr-auto
           [:li.nav-item.dropdown
            [:a#MenuLink.nav-link.dropdown-toggle {:href "#"
-                                                  :data-toggle "dropdown"} "Tags " [:b.caret]]
+                                                  :data-toggle "dropdown"
+                                                  :aria-haspopup "true"
+                                                  :aria-expanded "false"} "Tags " [:b.caret]]
            [:div.dropdown-menu {:aria-labelledby "tagsMenuLink"}
             [:a.dropdown-item {:href "/"} "All"]
             (for [tag (sort (distinct (flatten (for [row @db] (:tags (val row))))))]
@@ -109,9 +124,7 @@
             [:li [:a {:href (:url blog) :target "_blank"} (:title blog)]])]];;blog-roll
         ]]
       (include-js "/assets/jquery/jquery.min.js")
-      (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-clojure.js")
-      (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-lisp.min.js")
-      (include-js "/assets/bootstrap/js/bootstrap.bundle.min.js")])))
+      (include-js "/assets/bootstrap/dist/js/bootstrap.min.js")])))
 
 (defn handler [request]
   (cond
