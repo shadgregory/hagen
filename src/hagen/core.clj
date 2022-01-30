@@ -8,6 +8,7 @@
             [clojure.walk :refer [keywordize-keys]]
             [ring.util.codec :refer [form-decode]]
             [ring.middleware.file :refer [wrap-file]]
+            [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.webjars :refer [wrap-webjars]]))
 
 (def db (atom
@@ -27,17 +28,71 @@
 (defn posts-head []
   [:head
    [:meta {:charset "utf-8"}]
+   [:title (:brand @config)]
    (case (:theme @config)
-     "yeti" (include-css "/assets/bootswatch-yeti/bootstrap.min.css")
-     "flatly" (include-css "/assets/bootswatch-flatly/bootstrap.min.css")
-     "pulse" (include-css "/assets/bootswatch-pulse/bootstrap.min.css")
-     "spacelab" (include-css "/assets/bootswatch-spacelab/bootstrap.min.css")
-     "cosmo" (include-css "/assets/bootswatch-cosmo/bootstrap.min.css")
-     "minty" (include-css "/assets/bootswatch-minty/bootstrap.min.css")
-     "sketchy" (include-css "/assets/bootswatch-sketchy/bootstrap.min.css")
-     "solar" (include-css "/assets/bootswatch-solar/bootstrap.min.css")
-     "united" (include-css "/assets/bootswatch-united/bootstrap.min.css")
-     (include-css "/assets/bootswatch-litera/bootstrap.min.css"))])
+     "cerulean" (include-css "/assets/bootswatch/dist/cerulean/bootstrap.min.css")
+     "cosmo" (include-css "/assets/bootswatch/dist/cosmo/bootstrap.min.css")
+     "cyborg" (include-css "/assets/bootswatch/dist/cyborg/bootstrap.min.css")
+     "darkly" (include-css "/assets/bootswatch/dist/darkly/bootstrap.min.css")
+     "flatly" (include-css "/assets/bootswatch/dist/flatly/bootstrap.min.css")
+     "journal" (include-css "/assets/bootswatch/dist/journal/bootstrap.min.css")
+     "litera" (include-css "/assets/bootswatch/dist/litera/bootstrap.min.css")
+     "lumen" (include-css "/assets/bootswatch/dist/lumen/bootstrap.min.css")
+     "lux" (include-css "/assets/bootswatch/dist/lux/bootstrap.min.css")
+     "materia" (include-css "/assets/bootswatch/dist/materia/bootstrap.min.css")
+     "minty" (include-css "/assets/bootswatch/dist/minty/bootstrap.min.css")
+     "pulse" (include-css "/assets/bootswatch/dist/pulse/bootstrap.min.css")
+     "sandstone" (include-css "/assets/bootswatch/dist/sandstone/bootstrap.min.css")
+     "simplex" (include-css "/assets/bootswatch/dist/simplex/bootstrap.min.css")
+     "sketchy" (include-css "/assets/bootswatch/dist/sketchy/bootstrap.min.css")
+     "slate" (include-css "/assets/bootswatch/dist/slate/bootstrap.min.css")
+     "solar" (include-css "/assets/bootswatch/dist/solar/bootstrap.min.css")
+     "spacelab" (include-css "/assets/bootswatch/dist/spacelab/bootstrap.min.css")
+     "superhero" (include-css "/assets/bootswatch/dist/superhero/bootstrap.min.css")
+     "united" (include-css "/assets/bootswatch/dist/united/bootstrap.min.css")
+     "yeti" (include-css "/assets/bootswatch/dist/yeti/bootstrap.min.css")
+     (include-css "/assets/bootswatch-litera/bootstrap.min.css"))
+   (include-css "http://fonts.googleapis.com/css?family=Inconsolata")
+   (include-css "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/color-brewer.min.css")
+   (include-css "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css")
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js")
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-clojure.min.js")
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-lisp.min.js")
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-java.min.js")
+   [:style (css [:.clojure-body {:color "#000000"
+                                 :background-color "#ffffff"}]
+                [:.comment {:color "#8c8c8c"
+                            :font-style "italic"}]
+                [:.comment-delimiter {:color "#8c8c8c"
+                                      :font-style "italic"}]
+                [:.builtin {:color "#228b22"}]
+                [:.function-name {:color "#6a5acd"}]
+                [:.type {:color "#36648b"}]
+                [:.variable-name {:color "#b8860b"}]
+                [:.keyword {:color "#00008b"}])]
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js")])
+
+(defn navbar []
+  [:nav.navbar.navbar-expand-lg.navbar-light.bg-light
+   [:div.container
+    [:a.navbar-brand {:href "/"}
+     [:img {:src (str "/img/" (:brand-icon @config)) :style "padding-right:2px;"}] (:brand @config)]
+    [:div#navbar_collapse.collapse.navbar-collapse
+     [:ul.navbar-nav.mr-auto
+      [:li.nav-item.dropdown
+       [:a#MenuLink.nav-link.dropdown-toggle {:href "#"
+                                              :data-toggle "dropdown"
+                                              :data-bs-toggle "dropdown"
+                                              :aria-haspopup "true"
+                                              :aria-expanded "false"} "Tags " [:b.caret]]
+       [:div.dropdown-menu {:aria-labelledby "tagsMenuLink"}
+        [:a.dropdown-item {:href "/"} "All"]
+        (for [tag (sort (distinct (flatten (for [row @db] (:tags (val row))))))]
+          [:a.dropdown-item {:href (str "/tags/" tag)} tag])]]
+      [:li.nav-item
+       [:a.nav-link {:href "/about"} "About"]]
+      [:li.nav-item
+       [:a.nav-link {:target "_blank" :href "/rss"} "RSS"]]]]]])
 
 (defn posts-page [& args]
   (let [start (Integer. (:start (first args) 1))
@@ -45,22 +100,8 @@
     (html5
      (posts-head)
      [:body
-      [:nav.navbar.navbar-expand-sm.navbar-light.bg-light
-       [:div.container
-        [:a.navbar-brand {:href "/"}
-         [:img {:src (str "/img/" (:brand-icon @config)) :style "padding-right:2px;"}] (:brand @config)]
-        [:div#navbar_collapse.collapse.navbar-collapse
-         [:ul.navbar-nav.mr-auto
-          [:li.nav-item.dropdown
-           [:a#MenuLink.nav-link.dropdown-toggle {:href "#"
-                                                  :data-toggle "dropdown"} "Tags " [:b.caret]]
-           [:div.dropdown-menu {:aria-labelledby "tagsMenuLink"}
-            [:a.dropdown-item {:href "/"} "All"]
-            (for [tag (sort (distinct (flatten (for [row @db] (:tags (val row))))))]
-              [:a.dropdown-item {:href (str "/tags/" tag)} tag])]]
-          [:li.nav-item
-           [:a.nav-link {:target "_blank" :href "/rss"} "RSS"]]]]]]
       [:div.container
+       (navbar)
        [:div.row
         [:div.content.col-md-9
          [:h1 "Welcome"]
@@ -71,8 +112,10 @@
                 curr-db (for [x (range (dec start) (if (< (+ start 4) (count the-db))
                                                      (+ start 4)
                                                      (count the-db)))]
-                          (nth (sort #(let [[m1 d1 y1] (str/split (:date (val %1)) #"/")
-                                            [m2 d2 y2] (str/split (:date (val %2)) #"/")]
+                          (nth (sort #(let [[date1 t1] (str/split (:date (val %1)) #" ")
+                                            [date2 t2] (str/split (:date (val %2)) #" ")
+                                            [m1 d1 y1] (str/split date1 #"/")
+                                            [m2 d2 y2] (str/split date2 #"/")]
                                         (cond
                                           (not (zero? (compare y2 y1))) (compare y2 y1)
                                           (not (zero? (compare m2 m1))) (compare m2 m1)
@@ -98,23 +141,40 @@
                     (if (= x (int (Math/ceil (/ start 5))))
                       {:class "page-item active"}
                       {:class "page-item"})
-                    [:a.page-link {:href (str "/?start=" (inc (* 5 (dec x))))} x]])]])]
-            );; let
-          ];;div
-         ];;content
-        [:div.content.col-md-3
-         [:div [:h4 "Blog Roll"]]
-         [:ul
-          (for [blog (:blog-roll @config)]
-            [:li [:a {:href (:url blog) :target "_blank"} (:title blog)]])]];;blog-roll
+                    [:a.page-link {:href
+                                   (if (nil? tag)
+                                     (str "/?start=" (inc (* 5 (dec x))))
+                                     (str "/tags/" tag "?start=" (inc (* 5 (dec x)))))}
+                     x]])]])])]]
+        [:div.content.col-md-3.pt-2
+         [:div.card.border-info
+          [:div.card-header
+           [:h4 "Blog Roll"]]
+          [:div.card-body
+           [:ul
+            (for [blog (:blog-roll @config)]
+              [:li [:a {:href (:url blog) :target "_blank"} (:title blog)]])]]]];;blog-roll
         ]]
       (include-js "/assets/jquery/jquery.min.js")
-      (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-clojure.js")
-      (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-lisp.min.js")
-      (include-js "/assets/bootstrap/js/bootstrap.bundle.min.js")])))
+      (include-js "/assets/bootstrap/dist/js/bootstrap.min.js")])))
 
 (defn handler [request]
   (cond
+    (= "/about" (:uri request)) {:status 200
+                                 :headers {"Content-Type" "text/html"}
+                                 :body (html5
+                                        (posts-head)
+                                        [:body
+                                         [:div.container
+                                          (navbar)
+                                          [:div.row
+                                           [:div#content.col-md-12
+                                            [:h1.text-success "About"]
+                                            [:p (:about @config)]]
+                                           [:footer
+                                            [:hr]
+                                            [:p
+                                             "Site generated by " [:a {:target "_blank" :href "https://github.com/shadgregory/hagen"} "hagen"] "."]]]]])}
     (= "/rss" (:uri request)) {:status 200
                                :headers {"Content-Type" "text/xml"}
                                :body (str "<?xml version='1.0' encoding='UTF-8' ?>"
@@ -147,11 +207,14 @@
                                                                              "</item>"))))
                                           "</channel>"
                                           "</rss>")}
-    (re-find #"^\/tags" (:uri request)) {:status 200
-                                         :headers {"Content-Type" "text/html"}
-                                         :body (let [tag
-                                                     (nth (clojure.string/split (:uri request) #"\/") 2)]
-                                                 (posts-page {:tag tag}))}
+    (re-find #"^\/tags" (:uri request)) (let [args (if (not (nil? (:query-string request)))
+                                                     (keywordize-keys (form-decode (:query-string request))))]
+                                          {:status 200
+                                           :headers {"Content-Type" "text/html"}
+                                           :body (let [tag
+                                                       (nth (clojure.string/split (:uri request) #"\/") 2)]
+                                                   (posts-page {:tag tag
+                                                                :start (:start args 1)}))})
     (= "/" (:uri request)) (let [args (if (not (nil? (:query-string request)))
                                         (keywordize-keys (form-decode (:query-string request))))]
                              {:status 200
@@ -166,14 +229,14 @@
            :body (html5 (posts-head)
                         [:body [:h2 "Page not found."]])}))
 
-(defn -main [& args]
+(defn run [& args]
   (jetty/run-jetty
-   (wrap-file (wrap-webjars handler) "resources")
+   (wrap-reload (wrap-file (wrap-webjars handler) "resources"))
    {:port (:port @config)}))
 
 (defn defpost
   ([title body]
-   (let [date (.format (java.text.SimpleDateFormat. "MM/dd/yyyy") (new java.util.Date))]
+   (let [date (.format (java.text.SimpleDateFormat. "MM/dd/yyyy HH:mm") (new java.util.Date))]
      (if (nil? (get @db title))
        (do
          (swap! db assoc title {:date date :body body})
@@ -182,7 +245,7 @@
          (swap! db assoc title {:date (:date (get @db title)) :body body})
          (spit "./db.clj" @db)))))
   ([title body & tags]
-   (let [date (.format (java.text.SimpleDateFormat. "MM/dd/yyyy") (new java.util.Date))]
+   (let [date (.format (java.text.SimpleDateFormat. "MM/dd/yyyy HH:mm") (new java.util.Date))]
      (if (nil? (get @db title))
        (do
          (swap! db assoc title {:date date :body body :tags (reduce conj [] tags)})
@@ -194,19 +257,6 @@
 (defn init [config-map]
   (doseq [keyval config-map]
     (swap! config assoc (key keyval) (val keyval))))
-
-(init {:theme "sketchy"
-       :brand "Shad's Blog"
-       :link "https://wsgregory.us"
-       :brand-icon "chest.png"
-       :description "A most wonderous blog."
-       :sub-brand "Shad Gregory's Blog"
-       :blog-roll [{:title "Fix the Court"
-                    :url "https://fixthecourt.com/"}
-                   {:title "Planet Clojure"
-                    :url "http://planet.clojure.in/"}
-                   {:title "Pragmatic Emacs"
-                    :url "http://pragmaticemacs.com/"}]})
 
 (defn scorecard [title overturned good bad neutral]
   [:div
@@ -220,38 +270,14 @@
       [:p (str "Bad: " bad)]
       [:p (str "Neutral: " neutral) ]]]]])
 
-;; (defpost "Judicial Review Scorecard 1: Marbury v. Madison"
-;;   (html
-;;    [:div
-;;     [:p "Judicial review is the idea (at least in the United States) that court has the power to veto any law, or any part of any law, at any time. It's long been my suspicion that when the supreme court used judicial review against the states, it's a mixed bag. But when it uses judicial review against Congress, it's almost always bad. To test that, I've decided to start the judicial review scorecard."]
-;;     [:p [:i "Marbury v. Madison"] " is ground zero for judicial review. A lot of "
-;;      [:a {:href "https://en.wikipedia.org/wiki/Marbury_v._Madison"} "ink"]
-;;      " has been spilled on this decision, so I won't spend a lot of time on it except to say that this one is neutral. "]]
-;;    (scorecard "Marbury v. Madison" "Judiciary Act of 1789" 0 0 1))
-;;   "supreme_court" "judicial_review")
-
-;; (defpost "Judicial Review Scorecard 2: Dred Scott v. Sandford"
-;;   (html
-;;    [:div
-;;     [:p ]
-;;     (scorecard "Dred Scott v. Sandford" "Missouri Compromise of 1820" 0 1 1)]
-;;    )
-;;   "supreme_court" "judicial_review")
-
-(defpost "Orient RE-AW0004S"
+(defn watch-post [title url content]
   (html
-   [:div
-    [:p [:img {:src "/img/RE-AW0004S_New.jpg"
-               :height "300"
-               :alt "Orient Mechanical Classic Watch"}]]
-    [:p "Very attractive blue arabic numerals on a white dial. Love the power reserve complication and the 38.7 mm size. Around $800."]])
-  "watches")
-
-(defpost "Timex Marlin Hand-Wound"
-  (html
-   [:div
-    [:p [:img {:src "/img/TW2R47900.png"
-               :height "300"
-               :alt "Timex Marlin"}]]
-    [:p "Is it worth $200? Not sure, but nothing else looks like it. Love the mid-century numerals and the retro size"]])
-  "watches")
+   [:div.row
+    [:div.col-5
+     [:img {:src url
+            :height "300"
+            :alt title}]]
+    [:div.col-5
+     [:div.card.border-success.mb-3
+      [:div.card-body
+       content]]]]))
