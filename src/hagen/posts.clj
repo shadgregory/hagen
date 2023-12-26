@@ -1,6 +1,7 @@
 (ns hagen.posts
   (:require
    [hiccup.core :refer [html]]
+   [hiccup.util :refer [escape-html]]
    [hagen.core :refer [defpost watch-post scorecard init run]]))
 
 (defn -main [& args]
@@ -8,10 +9,12 @@
 
 (init {:theme "sketchy"
        ;;:theme "flatly"
+       ;;:theme "solar"
+       ;;:theme "journal"
        :brand "Shad's Blog"
        :link "https://wsgregory.us"
        :brand-icon "chest.png"
-       :about "Shad Gregory's blog. Watches and fulminations concerning the supreme court."
+       :about "Shad Gregory's blog."
        :description "A most wonderous blog."
        :sub-brand "Shad Gregory's Blog"
        :blog-roll [{:title "Fix the Court"
