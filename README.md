@@ -4,7 +4,7 @@ Clojure Blogging Software
 Hagen is something I wrote for my personal site, and it's very tailored to my needs.
 
 ```clojure
-(init {:theme "flatly" #Bootswatch Theme
+(init {:theme "flatly" ;;Bootswatch Theme
        :brand "My Blog"
        :link "https://example.com"
        :brand-icon "brand.png"
