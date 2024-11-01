@@ -164,8 +164,7 @@
           [:div.card-body
            [:ul
             (for [blog (:blog-roll @config)]
-              [:li [:a {:href (:url blog) :target "_blank"} (:title blog)]])]]]];;blog-roll
-        ]]
+              [:li [:a {:href (:url blog) :target "_blank"} (:title blog)]])]]]]]]
       (include-js "/assets/jquery/jquery.min.js")
       (include-js "/assets/bootstrap/dist/js/bootstrap.bundle.min.js")])))
 
@@ -223,20 +222,20 @@
                                           "</channel>"
                                           "</rss>")}
     (re-find #"^\/tags\/\w+" (:uri request)) (let [args (if (not (nil? (:query-string request)))
-                                                          (keywordize-keys (form-decode (:query-string request))))]
-                                               {:status 200
-                                                :headers {"Content-Type" "text/html"}
-                                                :body (let [tag
-                                                            (nth (clojure.string/split (:uri request) #"\/") 2)]
-                                                        (posts-page {:tag tag
-                                                                     :start (:start args 1)}))})
+                                                     (keywordize-keys (form-decode (:query-string request))))]
+                                          {:status 200
+                                           :headers {"Content-Type" "text/html"}
+                                           :body (let [tag
+                                                       (nth (clojure.string/split (:uri request) #"\/") 2)]
+                                                   (posts-page {:tag tag
+                                                                :start (:start args 1)}))})
     (or (= "/" (:uri request))
         (= "/tags" (:uri request))
         (= "/tags/" (:uri request))) (let [args (if (not (nil? (:query-string request)))
-                                                  (keywordize-keys (form-decode (:query-string request))))]
-                                       {:status 200
-                                        :headers {"Content-Type" "text/html"}
-                                        :body (posts-page args)})
+                                          (keywordize-keys (form-decode (:query-string request))))]
+                               {:status 200
+                                :headers {"Content-Type" "text/html"}
+                                :body (posts-page args)})
     (not (nil? (re-find #"\/tags\/" (:uri request))))
     {:status 200
      :headers {"Content-Type" "text/html"}
@@ -254,27 +253,27 @@
 
 (defn defpost
   ""
-  ([title body publish?]
-   (let [date (.format (java.text.SimpleDateFormat. "MM/dd/yyyy HH:mm") (new java.util.Date))]
+  [title body config & tags]
+  (cond
+    (or (nil? config) (not (map? config)))
+    (do
+      (swap! db assoc title {:date (.format
+                                    (java.text.SimpleDateFormat. "MM/dd/yyyy HH:mm")
+                                    (new java.util.Date))
+                             :body "config required!"
+                             :tags ""})
+      (spit "./db.clj" @db))
+    :else
+    (let [date (get config "date"
+                  (.format (java.text.SimpleDateFormat. "MM/dd/yyyy HH:mm") (new java.util.Date)))
+        publish? (get config "publish?" false)]
      (cond
        (not publish?) (do
                         (swap! db dissoc title)
                         (spit "./db.clj" @db))
        (nil? (get @db title)) (do
-                                (swap! db assoc title {:date date :body body})
-                                (spit "./db.clj" @db))
-       :else
-       (do
-         (swap! db assoc title {:date (:date (get @db title)) :body body})
-         (spit "./db.clj" @db)))))
-  ([title body publish? & tags]
-   (let [date (.format (java.text.SimpleDateFormat. "MM/dd/yyyy HH:mm") (new java.util.Date))]
-     (cond
-       (not publish?) (do
-                        (swap! db dissoc title)
-                        (spit "./db.clj" @db))
-       (nil? (get @db title)) (do
-                                (swap! db assoc title {:date date :body body :tags (reduce conj [] tags)})
+                                (swap! db assoc title {:date date :body body
+                                                       :tags (reduce conj [] tags)})
                                 (spit "./db.clj" @db))
        :else
        (do
