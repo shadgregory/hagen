@@ -1,0 +1,15 @@
+{:deps
+ {
+  ring-webjars/ring-webjars {:mvn/version "0.3.0"}
+  ring/ring {:mvn/version "1.13.0"}
+  ring-logger/ring-logger {:mvn/version "1.1.1"}
+  nrepl/nrepl {:mvn/version "1.3.0"}
+  org.webjars/jquery {:mvn/version "3.7.1"}
+  org.webjars.npm/bootstrap {:mvn/version "5.3.3"}
+  org.webjars.npm/bootswatch {:mvn/version "5.3.3"}
+  ring/ring-jetty-adapter {:mvn/version "1.13.0"}
+  org.slf4j/slf4j-simple {:mvn/version "2.0.16"}
+  org.clojure/clojure {:mvn/version "1.12.0"}
+  org.apache.logging.log4j/log4j-api {:mvn/version "2.22.1"}
+  org.apache.logging.log4j/log4j-core {:mvn/version "2.22.1"}}
+ :paths ["src"]}

@@ -1,4 +1,4 @@
-(ns hagen.core
+(ns hagen
   (:require [ring.adapter.jetty :as jetty]
             [hiccup.page :refer [include-js include-css html5]]
             [hiccup.core :refer [html]]
@@ -245,7 +245,7 @@
            :body (html5 (posts-head)
                         [:body [:h2 "Page not found."]])}))
 
-(defn run [& args]
+(defn start [& args]
   (. log info "START In main...")
   (jetty/run-jetty
    (wrap-reload (wrap-file (wrap-webjars handler) "resources"))
