@@ -169,7 +169,7 @@
       (include-js "/assets/bootstrap/dist/js/bootstrap.bundle.min.js")])))
 
 (defn handler [request]
-  (. log info (str "REQUEST : "  (:uri request)))
+  (. log info (str "REQUEST : [" (:remote-addr request) "] - "  (:uri request)))
   (cond
     (= "/about" (:uri request)) {:status 200
                                  :headers {"Content-Type" "text/html"}
