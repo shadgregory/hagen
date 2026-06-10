@@ -9,14 +9,19 @@
             [ring.util.codec :refer [form-decode]]
             [ring.middleware.file :refer [wrap-file]]
             [ring.middleware.reload :refer [wrap-reload]]
-            [ring.middleware.webjars :refer [wrap-webjars]]))
+            [ring.middleware.webjars :refer [wrap-webjars]])
+  (:import org.apache.logging.log4j.Logger
+           org.apache.logging.log4j.LogManager))
 
 (def db (atom
          (if (.exists (io/file "./db.clj"))
            (eval (read-string (slurp "./db.clj")))
            {})))
+
 (def config (atom {:port 3003
                    :brand "Generic Blog"}))
+
+(def log (. LogManager getLogger "main"))
 
 (defn member? [a v]
   (loop [v v]
@@ -41,7 +46,9 @@
      "lux" (include-css "/assets/bootswatch/dist/lux/bootstrap.min.css")
      "materia" (include-css "/assets/bootswatch/dist/materia/bootstrap.min.css")
      "minty" (include-css "/assets/bootswatch/dist/minty/bootstrap.min.css")
+     "morph" (include-css "/assets/bootswatch/dist/morph/bootstrap.min.css")
      "pulse" (include-css "/assets/bootswatch/dist/pulse/bootstrap.min.css")
+     "quartz" (include-css "/assets/bootswatch/dist/quartz/bootstrap.min.css")
      "sandstone" (include-css "/assets/bootswatch/dist/sandstone/bootstrap.min.css")
      "simplex" (include-css "/assets/bootswatch/dist/simplex/bootstrap.min.css")
      "sketchy" (include-css "/assets/bootswatch/dist/sketchy/bootstrap.min.css")
@@ -50,15 +57,19 @@
      "spacelab" (include-css "/assets/bootswatch/dist/spacelab/bootstrap.min.css")
      "superhero" (include-css "/assets/bootswatch/dist/superhero/bootstrap.min.css")
      "united" (include-css "/assets/bootswatch/dist/united/bootstrap.min.css")
+     "vapor" (include-css "/assets/bootswatch/dist/vapor/bootstrap.min.css")
      "yeti" (include-css "/assets/bootswatch/dist/yeti/bootstrap.min.css")
+     "zephyr" (include-css "/assets/bootswatch/dist/zephyr/bootstrap.min.css")
      (include-css "/assets/bootswatch-litera/bootstrap.min.css"))
-   (include-css "http://fonts.googleapis.com/css?family=Inconsolata")
    (include-css "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/color-brewer.min.css")
-   (include-css "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css")
-   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js")
-   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-clojure.min.js")
-   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-lisp.min.js")
-   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-java.min.js")
+   [:link {:rel "icon" :type "image/x-icon" :href "/img/favicon.ico"}]
+   (include-css "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css")
+
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js")
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clojure.min.js")
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lisp.min.js")
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js")
+   (include-js "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js")
    [:style (css [:.clojure-body {:color "#000000"
                                  :background-color "#ffffff"}]
                 [:.comment {:color "#8c8c8c"
@@ -146,19 +157,30 @@
                                      (str "/?start=" (inc (* 5 (dec x))))
                                      (str "/tags/" tag "?start=" (inc (* 5 (dec x)))))}
                      x]])]])])]]
+
         [:div.content.col-md-3.pt-2
-         [:div.card.border-info
-          [:div.card-header
-           [:h4 "Blog Roll"]]
-          [:div.card-body
-           [:ul
-            (for [blog (:blog-roll @config)]
-              [:li [:a {:href (:url blog) :target "_blank"} (:title blog)]])]]]];;blog-roll
-        ]]
+         [:div.row
+          [:div.card.border-info
+           [:div.card-header
+            [:h4 "Blog Roll"]]
+           [:div.card-body
+            [:ul
+             (for [blog (:blog-roll @config)]
+               [:li [:a {:href (:url blog) :target "_blank"} (:title blog)]])]]]]
+         (if (not (nil? (:downloads @config)))
+           [:div.row
+            [:div.card.border-info
+           [:div.card-header
+            [:h4 "Downloads"]]
+           [:div.card-body
+            [:ul
+             (for [x (:downloads @config)]
+               [:li [:a {:href (:url x) :target "_blank"} (:title x)]])]]]])]]]
       (include-js "/assets/jquery/jquery.min.js")
-      (include-js "/assets/bootstrap/dist/js/bootstrap.min.js")])))
+      (include-js "/assets/bootstrap/dist/js/bootstrap.bundle.min.js")])))
 
 (defn handler [request]
+  (. log info (str "REQUEST : "  (:uri request)))
   (cond
     (= "/about" (:uri request)) {:status 200
                                  :headers {"Content-Type" "text/html"}
@@ -207,7 +229,7 @@
                                                                              "</item>"))))
                                           "</channel>"
                                           "</rss>")}
-    (re-find #"^\/tags" (:uri request)) (let [args (if (not (nil? (:query-string request)))
+    (re-find #"^\/tags\/\w+" (:uri request)) (let [args (if (not (nil? (:query-string request)))
                                                      (keywordize-keys (form-decode (:query-string request))))]
                                           {:status 200
                                            :headers {"Content-Type" "text/html"}

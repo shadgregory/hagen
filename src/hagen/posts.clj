@@ -99,11 +99,11 @@
 ;;                "The super minimal design on this chronograph is a thing of beauty. $1995."))
 ;;   "watches")
 
-;; (defpost "Grand Seiko SBGA413"
-;;   (watch-post "Grand Seiko SBGA413"
-;;               "/img/SBGA413G.png"
-;;               "The Snowflake is a work of art, and the Shunbun takes it to the next level with it's subtle pink hues. Definitely a luxury watch at $6300.")
-;;   "watches")
+(defpost "Grand Seiko SBGA413"
+  (watch-post "Grand Seiko SBGA413"
+              "/img/SBGA413G.png"
+              "The Snowflake is a work of art, and the Shunbun takes it to the next level with it's subtle pink hues. Definitely a luxury watch at $6300.")
+  {"publish?" false} "watches")
 
 ;; (defpost "Seiko Presage SRQ023"
 ;;   (watch-post "Seiko Presage SRQ023"
@@ -111,11 +111,12 @@
 ;;               "I really love the look of white enamel watches. And it's a mechanical chronograph too. $2400.")
 ;;   "watches")
 
-;; (defpost "Seiko Presage SPB161"
-;;   (watch-post "Seiko Presage SPB161"
-;;               "/img/seiko_SPB161.jpg"
-;;               "Love the blue hands on white enamel, and the small seconds and power reserve complications on top of the minimalist design is super neat. $1300.")
-;;   "watches")
+(defpost "Seiko Presage SPB161"
+  (watch-post "Seiko Presage SPB161"
+              "/img/seiko_SPB161.jpg"
+              "Love the blue hands on white enamel, and the small seconds and power reserve complications on top of the minimalist design is super neat. $1300.")
+  {"publish?" false}
+  "watches")
 
 ;; (defpost "Seiko Presage SRPE41"
 ;;   (watch-post "Seiko Presage SRPE41"
@@ -230,8 +231,10 @@
 ;;     (scorecard "Ex parte Garland" "Congressional Act of January 24, 1865" 0 2 1)])
 ;;   "supreme_court" "judicial_review")
 
-;; (defpost "House Votes to Remove Taney Bust"
-;;   (html
-;;    [:div
-;;     [:p [:a {:href "https://www.cnn.com/2021/06/29/politics/house-vote-confederate-statues/index.html"} "It's"] " about damned time."]])
-;;   "supreme_court")
+(defpost "House Votes to Remove Taney Bust"
+  (html
+   [:div
+    [:p [:a {:href "https://www.cnn.com/2021/06/29/politics/house-vote-confederate-statues/index.html"} "It's"] " about damned time."]])
+  {"publish?" true
+   "date" "06/30/2021 00:00"}
+  "supreme_court")
