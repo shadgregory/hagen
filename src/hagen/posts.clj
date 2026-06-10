@@ -8,39 +8,39 @@
   (run args))
 
 ;; https://bootswatch.com/
-(init {:theme "sketchy"
-       ;;:theme "flatly"
-       ;;:theme "pulse"
-       ;;:theme "cosmo"
-       ;;:theme "cerulean"
-       ;;:theme "journal"
-       ;;:theme "yeti"
-       ;;:theme "zephyr"
-       ;;:theme "solar"
-       ;;:theme "journal"
-       :brand "Shad's Blog"
-       :link "https://wsgregory.us"
-       :brand-icon "chest.png"
-       :about "Shad Gregory's blog."
-       :description "A most wonderous blog."
-       :sub-brand "Shad Gregory's Blog"
-       :blog-roll [{:title "Sacha Chua"
-                    :url "https://sachachua.com/blog/emacs/"}
-                   {:title "Kevin Drum"
-                    :url "https://jabberwocking.com/"}
-                   {:title "Rob MacKillop"
-                    :url "https://rmclassicalguitar.com/19th-century"}
-                   {:title "No-Nail Guitar"
-                    :url "https://nonailguitar.com"}
-                   {:title "5-4 Pod"
-                    :url "https://www.fivefourpod.com/"}
-                   {:title "Follow me on Mastodon"
-                    :url "https://mastodon.social/@shadgregory"
-                    :rel "me"}
-                   {:title "Hagen: Clojure Blogging"
-                    :url "https://github.com/shadgregory/hagen"}
-                   {:title "Planet Clojure"
-                    :url "http://planet.clojure.in/"}]})
+;; (init {:theme "sketchy"
+;;        ;;:theme "flatly"
+;;        ;;:theme "pulse"
+;;        ;;:theme "cosmo"
+;;        ;;:theme "cerulean"
+;;        ;;:theme "journal"
+;;        ;;:theme "yeti"
+;;        ;;:theme "zephyr"
+;;        ;;:theme "solar"
+;;        ;;:theme "journal"
+;;        :brand "Shad's Blog"
+;;        :link "https://wsgregory.us"
+;;        :brand-icon "chest.png"
+;;        :about "Shad Gregory's blog."
+;;        :description "A most wonderous blog."
+;;        :sub-brand "Shad Gregory's Blog"
+;;        :blog-roll [{:title "Sacha Chua"
+;;                     :url "https://sachachua.com/blog/emacs/"}
+;;                    {:title "Kevin Drum"
+;;                     :url "https://jabberwocking.com/"}
+;;                    {:title "Rob MacKillop"
+;;                     :url "https://rmclassicalguitar.com/19th-century"}
+;;                    {:title "No-Nail Guitar"
+;;                     :url "https://nonailguitar.com"}
+;;                    {:title "5-4 Pod"
+;;                     :url "https://www.fivefourpod.com/"}
+;;                    {:title "Follow me on Mastodon"
+;;                     :url "https://mastodon.social/@shadgregory"
+;;                     :rel "me"}
+;;                    {:title "Hagen: Clojure Blogging"
+;;                     :url "https://github.com/shadgregory/hagen"}
+;;                    {:title "Planet Clojure"
+;;                     :url "http://planet.clojure.in/"}]})
 
 (defpost "Rob Mackillop"
   (html
