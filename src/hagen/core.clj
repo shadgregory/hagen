@@ -9,6 +9,9 @@
             [ring.util.codec :refer [form-decode]]
             [ring.middleware.file :refer [wrap-file]]
             [ring.middleware.reload :refer [wrap-reload]]
+            [ring.middleware.content-type :refer [wrap-content-type]]
+            [ring.middleware.resource :refer [wrap-resource]]
+            [ring.middleware.not-modified :refer [wrap-not-modified]]
             [ring.middleware.webjars :refer [wrap-webjars]])
   (:import org.apache.logging.log4j.Logger
            org.apache.logging.log4j.LogManager))
@@ -256,11 +259,21 @@
            :body (html5 (posts-head)
                         [:body [:h2 "Page not found."]])}))
 
+;; (defn run [& args]
+;;   (. log info "START In main...")
+;;   (jetty/run-jetty
+;;    (wrap-reload (wrap-file (wrap-webjars handler) "resources"))
+;;    {:port (:port @config)}))
+
 (defn run [& args]
   (. log info "START In main...")
   (jetty/run-jetty
-   (wrap-reload (wrap-file (wrap-webjars handler) "resources"))
-   {:port (:port @config)}))
+    (-> handler
+        wrap-webjars
+        (wrap-resource "public")
+        wrap-content-type
+        wrap-not-modified)
+    {:port (:port @config)}))
 
 (defn defpost
   ""
