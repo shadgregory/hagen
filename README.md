@@ -10,11 +10,12 @@ Hagen is something I wrote for my personal site, and it's very tailored to my ne
        :brand-icon "brand.png"
        :about "A blog about stuff."
        :description "A most wonderous blog."
-       :sub-brand "It's about the stuff!"
+       :sub-brand "It's about stuff!"
        :blog-roll [{:title "CNN"
                     :url "https://www.cnn.com/"}
                    {:title "Google"
                     :url "https://www.google.com/"}]})
+                    
 (defpost "My Post"
-  (str (html [:p "I had a very good day today. How about you?"]) "daily-post")
+         (html [:p "I had a very good day today. How about you?"]) {"publish?" true} "daily-post")
 ```
